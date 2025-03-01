@@ -1,5 +1,3 @@
-// PROVIDED CODE BELOW (LINES 1 - 80) DO NOT REMOVE
-
 // The store will hold all information needed globally
 let store = {
 	track_id: undefined,
@@ -79,14 +77,8 @@ async function delay(ms) {
 	}
 }
 
-// ^ PROVIDED CODE ^ DO NOT REMOVE
-
-// BELOW THIS LINE IS CODE WHERE STUDENT EDITS ARE NEEDED ----------------------------
-// TIP: Do a full file search for TODO to find everything that needs to be done for the game to work
-
 // This async function controls the flow of the race, add the logic and error handling
 async function handleCreateRace() {
-	console.log("in create race")
 
 	// render starting UI
 	renderAt('#race', renderRaceStartView(store.track_name))
@@ -124,16 +116,15 @@ function runRace(raceID) {
 
 		const raceInterval = setInterval( async () => {
 			const raceInfo = await getRace(raceID);
-			if (raceInfo.status == 'in-progress') {
-				renderAt('#leaderBoard', raceProgress(raceInfo.positions));
-			} else if (raceInfo.status == 'finished') {
+			if (raceInfo.status == 'finished') {
 				clearInterval(raceInterval);
 				renderAt('#race', resultsView(raceInfo.positions));
 				resolve(raceInfo);
+			} else if (raceInfo.status == 'in-progress') {
+				renderAt('#leaderBoard', raceProgress(raceInfo.positions));
 			} else {
 				reject('Error in the race.');
 			}
-			console.log(`Status: ${raceInfo.status}`);
 		}, 500);
 
 		return raceInterval;
@@ -185,7 +176,6 @@ async function runCountdown() {
 }
 
 function handleSelectRacer(target) {
-	console.log("selected a racer", target.id)
 
 	// remove class selected from all racer options
 	const selected = document.querySelector('#racers .selected')
@@ -198,7 +188,6 @@ function handleSelectRacer(target) {
 }
 
 function handleSelectTrack(target) {
-	console.log("selected track", target.id)
 
 	// remove class selected from all track options
 	const selected = document.querySelector('#tracks .selected')
@@ -292,7 +281,10 @@ function renderRaceStartView(track) {
 }
 
 function resultsView(positions) {
-	userPlayer.driver_name += " (you)"
+	let userPlayer = positions.find(e => e.id === parseInt(store.player_id));
+	userPlayer.driver_name += " (you)";
+
+	positions = positions.sort((a, b) => (a.segment > b.segment) ? -1 : 1);
 	let count = 1
 
 	const results = positions.map(p => {
@@ -348,9 +340,6 @@ function renderAt(element, html) {
 	node.innerHTML = html
 }
 
-// ^ Provided code ^ do not remove
-
-
 // API CALLS ------------------------------------------------
 
 const SERVER = 'http://localhost:3001'
@@ -402,7 +391,7 @@ function createRace(player_id, track_id) {
 	.catch(err => console.log("Problem with createRace request::", err))
 }
 
-function getRace(id) {
+async function getRace(id) {
 	// DONE - GET request to `${SERVER}/api/races/${id}`
 	return fetch(`${SERVER}/api/races/${id}`)
 		.then(response => response.json())
